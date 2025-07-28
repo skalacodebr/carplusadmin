@@ -1,0 +1,59 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 225 6% 17%; /* #2c2b34 */
+    --foreground: 0 0% 90%;
+    --card: 225 6% 20%;
+    --card-foreground: 0 0% 90%;
+    --popover: 225 6% 20%;
+    --popover-foreground: 0 0% 90%;
+    --primary: 45 100% 49%; /* Ajustado para o amarelo Car+ #fdc300 */
+    --primary-foreground: 0 0% 0%;
+    --secondary: 225 6% 25%;
+    --secondary-foreground: 0 0% 85%;
+    --muted: 225 6% 15%;
+    --muted-foreground: 0 0% 60%;
+    --accent: 225 6% 25%;
+    --accent-foreground: 0 0% 85%;
+    --destructive: 45 100% 49%;
+    --destructive-foreground: 0 0% 0%;
+    --border: 225 6% 30%;
+    --input: 225 6% 25%;
+    --ring: 45 100% 49%; /* Ajustado para o amarelo Car+ */
+    --radius: 0.5rem;
+  }
+
+  .dark {
+    --background: 225 6% 10%; /* Tons mais escuros */
+    --foreground: 0 0% 95%;
+    --card: 225 6% 12%;
+    --card-foreground: 0 0% 95%;
+    --popover: 225 6% 12%;
+    --popover-foreground: 0 0% 95%;
+    --primary: 45 100% 49%; /* Ajustado para o amarelo Car+ #fdc300 */
+    --primary-foreground: 0 0% 0%;
+    --secondary: 225 6% 18%;
+    --secondary-foreground: 0 0% 90%;
+    --muted: 225 6% 8%;
+    --muted-foreground: 0 0% 65%;
+    --accent: 225 6% 18%;
+    --accent-foreground: 0 0% 90%;
+    --destructive: 45 100% 49%;
+    --destructive-foreground: 0 0% 0%;
+    --border: 225 6% 22%;
+    --input: 225 6% 18%;
+    --ring: 45 100% 49%; /* Ajustado para o amarelo Car+ */
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
