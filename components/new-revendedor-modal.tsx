@@ -13,12 +13,19 @@ import {
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import { toast } from "@/hooks/use-toast"
 import { supabase } from "@/lib/supabase"
 import { hashPassword } from "@/lib/auth"
 import { fetchAddressByCep } from "@/lib/via-cep"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Camera, Loader2, Store, Package } from "lucide-react"
+import { Camera, Loader2, Store, Package, CreditCard } from "lucide-react"
 import { useCallback, useState } from "react"
 
 interface NewRevendedorModalProps {
@@ -45,6 +52,8 @@ export function NewRevendedorModal({ open, onOpenChange, onSuccess }: NewRevende
     uf: "",
     loja: "",
     frete: "10", // Valor padrão de 10 reais
+    chave_pix: "",
+    chave_tipo: "CPF",
     foto: null as File | null,
     fotoUrl: "",
   })
@@ -197,10 +206,10 @@ export function NewRevendedorModal({ open, onOpenChange, onSuccess }: NewRevende
 
     try {
       // Validar campos obrigatórios
-      if (!formData.nome || !formData.email || !formData.senha || !formData.telefone || !formData.loja) {
+      if (!formData.nome || !formData.email || !formData.senha || !formData.telefone || !formData.loja || !formData.chave_pix || !formData.chave_tipo) {
         toast({
           title: "Erro",
-          description: "Preencha todos os campos obrigatórios",
+          description: "Preencha todos os campos obrigatórios incluindo os dados PIX",
           variant: "destructive",
         })
         setIsLoading(false)
@@ -315,6 +324,8 @@ export function NewRevendedorModal({ open, onOpenChange, onSuccess }: NewRevende
           vendas: 0,
           loja: formData.loja,
           frete: freteNumerico, // Adicionar o valor do frete
+          chave_pix: formData.chave_pix,
+          chave_tipo: formData.chave_tipo,
         },
       ])
 
@@ -351,6 +362,8 @@ export function NewRevendedorModal({ open, onOpenChange, onSuccess }: NewRevende
         uf: "",
         loja: "",
         frete: "10", // Valor padrão
+        chave_pix: "",
+        chave_tipo: "CPF",
         foto: null,
         fotoUrl: "",
       })
@@ -467,6 +480,54 @@ export function NewRevendedorModal({ open, onOpenChange, onSuccess }: NewRevende
                 required
               />
               <p className="text-xs text-muted-foreground">Valor padrão do frete para este revendedor</p>
+            </div>
+
+            {/* Campos PIX */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="chave_tipo" className="text-right flex items-center">
+                  <CreditCard className="h-4 w-4 mr-2" />
+                  Tipo de Chave PIX *
+                </Label>
+                <Select
+                  value={formData.chave_tipo}
+                  onValueChange={(value) => setFormData(prev => ({ ...prev, chave_tipo: value }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione o tipo" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="CPF">CPF</SelectItem>
+                    <SelectItem value="CNPJ">CNPJ</SelectItem>
+                    <SelectItem value="EMAIL">Email</SelectItem>
+                    <SelectItem value="PHONE">Telefone</SelectItem>
+                    <SelectItem value="EVP">Chave Aleatória</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="chave_pix" className="text-right flex items-center">
+                  <CreditCard className="h-4 w-4 mr-2" />
+                  Chave PIX *
+                </Label>
+                <Input
+                  id="chave_pix"
+                  name="chave_pix"
+                  value={formData.chave_pix}
+                  onChange={handleChange}
+                  placeholder={
+                    formData.chave_tipo === "CPF" ? "000.000.000-00" :
+                    formData.chave_tipo === "CNPJ" ? "00.000.000/0000-00" :
+                    formData.chave_tipo === "EMAIL" ? "email@exemplo.com" :
+                    formData.chave_tipo === "PHONE" ? "(00) 00000-0000" :
+                    "Chave aleatória"
+                  }
+                  required
+                />
+                <p className="text-xs text-muted-foreground">
+                  Chave PIX para recebimento dos repasses
+                </p>
+              </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

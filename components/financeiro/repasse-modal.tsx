@@ -22,9 +22,8 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/lib/supabase";
-import { Loader2 } from "lucide-react";
+import { Loader2, CheckCircle2, Calendar, DollarSign, User } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { createTransfer } from "@/lib/asaas";
 
 interface Pedido {
   id: number;
@@ -63,6 +62,13 @@ export function RepasseModal({
   const [observacoes, setObservacoes] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectAll, setSelectAll] = useState(true);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [repasseRealizado, setRepasseRealizado] = useState<{
+    valor: number;
+    pedidos: number;
+    transferId: string;
+    data: string;
+  } | null>(null);
   const { toast } = useToast();
 
   const totalSelecionado = pedidos
@@ -148,7 +154,12 @@ export function RepasseModal({
         return;
       }
 
-      const transferData: AsaasTransfer = {
+      // MODO SIMULAÇÃO: Transferência simulada para testes (sem integração com Asaas)
+      // Para ativar integração real, descomente as linhas abaixo e remova a simulação:
+      // import { createTransfer } from "@/lib/asaas";
+      // const transferResponse = await createTransfer(transferData);
+      
+      const transferData = {
         value: totalSelecionado,
         operationType: "PIX" as const,
         pixAddressKey: revendedor.chave_pix,
@@ -156,22 +167,18 @@ export function RepasseModal({
         description: "Repasse de pedidos para " + revendedor.loja,
         scheduleDate: new Date().toISOString(),
       };
-      console.log("Transferencia Data:", transferData);
-      const transferResponse = await createTransfer(transferData);
-
-      if (transferResponse.error) {
-        console.error(
-          "Erro ao criar transferencia no Asaas:",
-          transferResponse.error
-        );
-        toast({
-          title: "Erro ao criar transferencia",
-          description:
-            "Ocorreu um erro ao registrar a transferencia. Tente novamente.",
-          variant: "destructive",
-        });
-        return;
-      }
+      
+      console.log("🧪 SIMULAÇÃO: Transferência simulada:", transferData);
+      
+      // Simular resposta de sucesso do Asaas para teste
+      const transferResponse = {
+        id: `sim_transfer_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        status: "PENDING",
+        value: totalSelecionado,
+        dateCreated: new Date().toISOString(),
+        object: "transfer",
+        simulacao: true // Flag para identificar que é simulação
+      };
 
       // 1. Criar o registro de repasse
       const { data: repasseData, error: repasseError } = await supabase
@@ -240,14 +247,16 @@ export function RepasseModal({
         return;
       }
 
-      toast({
-        title: "Repasse realizado com sucesso",
-        description: `Repasse de R$ ${totalSelecionado.toLocaleString("pt-BR", {
-          minimumFractionDigits: 2,
-        })} para ${revendedor.loja} registrado.`,
+      // Preparar dados do repasse realizado
+      setRepasseRealizado({
+        valor: totalSelecionado,
+        pedidos: pedidosSelecionados.length,
+        transferId: transferResponse.id,
+        data: new Date().toISOString(),
       });
 
-      onComplete();
+      // Mostrar modal de sucesso
+      setShowSuccessModal(true);
     } catch (error) {
       console.error("Erro ao processar repasse:", error);
       toast({
@@ -259,6 +268,93 @@ export function RepasseModal({
       setIsSubmitting(false);
     }
   };
+
+  const handleSuccessModalClose = () => {
+    setShowSuccessModal(false);
+    setRepasseRealizado(null);
+    onComplete();
+  };
+
+  // Modal de sucesso do repasse
+  if (showSuccessModal && repasseRealizado) {
+    return (
+      <Dialog open onOpenChange={handleSuccessModalClose}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <div className="flex items-center justify-center mb-4">
+              <CheckCircle2 className="h-16 w-16 text-green-500" />
+            </div>
+            <DialogTitle className="text-center text-xl">
+              Repasse Realizado com Sucesso! 
+            </DialogTitle>
+            <DialogDescription className="text-center">
+              🧪 <strong>Modo Simulação</strong> - O repasse foi registrado no sistema para testes
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 my-6">
+            <div className="bg-green-50 border border-green-200 rounded-lg p-4 space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-2">
+                  <User className="h-4 w-4 text-gray-600" />
+                  <span className="text-sm font-medium text-gray-600">Revendedor:</span>
+                </div>
+                <span className="font-semibold">{revendedor.loja}</span>
+              </div>
+
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-2">
+                  <DollarSign className="h-4 w-4 text-gray-600" />
+                  <span className="text-sm font-medium text-gray-600">Valor:</span>
+                </div>
+                <span className="font-semibold text-green-600 text-lg">
+                  R$ {repasseRealizado.valor.toLocaleString("pt-BR", {
+                    minimumFractionDigits: 2,
+                  })}
+                </span>
+              </div>
+
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-2">
+                  <CheckCircle2 className="h-4 w-4 text-gray-600" />
+                  <span className="text-sm font-medium text-gray-600">Pedidos:</span>
+                </div>
+                <span className="font-semibold">{repasseRealizado.pedidos} pedidos</span>
+              </div>
+
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-2">
+                  <Calendar className="h-4 w-4 text-gray-600" />
+                  <span className="text-sm font-medium text-gray-600">Data:</span>
+                </div>
+                <span className="font-semibold">
+                  {new Date(repasseRealizado.data).toLocaleString("pt-BR")}
+                </span>
+              </div>
+            </div>
+
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+              <p className="text-sm text-blue-800">
+                <strong>ID da Transferência:</strong> {repasseRealizado.transferId}
+              </p>
+              <p className="text-xs text-blue-600 mt-1">
+                Método: PIX • Chave: {revendedor.chave_pix}
+              </p>
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button 
+              onClick={handleSuccessModalClose}
+              className="w-full"
+            >
+              Fechar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    );
+  }
 
   return (
     <Dialog open onOpenChange={onClose}>
