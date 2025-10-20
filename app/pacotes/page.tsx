@@ -15,7 +15,8 @@ import { PacoteDetailsDialog } from "@/components/pacotes/pacote-details-dialog"
 interface Pacote {
   id: number
   nome: string
-  preco: number | null
+  preco_cpf: number | null
+  preco_cnpj: number | null
   vendas: number
   cor?: string
   imagem?: string
@@ -37,7 +38,7 @@ export default function Pacotes() {
       // Buscar todos os pacotes
       const { data: pacotesData, error: pacotesError } = await supabase
         .from("pacotes")
-        .select("id, descricao, preco, cor, imagem")
+        .select("id, descricao, preco_cpf, preco_cnpj, cor, imagem")
         .order("descricao")
 
       if (pacotesError) {
@@ -205,7 +206,12 @@ export default function Pacotes() {
                         </div>
                       </TableCell>
                       <TableCell className="font-medium">{pacote.nome}</TableCell>
-                      <TableCell>{formatarPreco(pacote.preco)}</TableCell>
+                      <TableCell>
+                        <div className="flex flex-col gap-1">
+                          <span className="text-xs text-muted-foreground">CPF: {formatarPreco(pacote.preco_cpf)}</span>
+                          <span className="text-xs text-muted-foreground">CNPJ: {formatarPreco(pacote.preco_cnpj)}</span>
+                        </div>
+                      </TableCell>
                       <TableCell>{pacote.vendas || 0}</TableCell>
                       <TableCell className="text-right">
                         <TooltipProvider>

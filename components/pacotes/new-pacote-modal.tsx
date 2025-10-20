@@ -68,7 +68,8 @@ export function NewPacoteModal({ isOpen, onClose, onSuccess }: NewPacoteModalPro
   // Estados para os dados do pacote
   const [prefixo, setPrefixo] = useState("LTP")
   const [numero, setNumero] = useState("")
-  const [precoFormatado, setPrecoFormatado] = useState("R$ 0,00")
+  const [precoCpfFormatado, setPrecoCpfFormatado] = useState("R$ 0,00")
+  const [precoCnpjFormatado, setPrecoCnpjFormatado] = useState("R$ 0,00")
   const [cor, setCor] = useState("#69245d")
 
   // Estados para as combinações
@@ -110,7 +111,8 @@ export function NewPacoteModal({ isOpen, onClose, onSuccess }: NewPacoteModalPro
   const resetForm = () => {
     setPrefixo("LTP")
     setNumero("")
-    setPrecoFormatado("R$ 0,00")
+    setPrecoCpfFormatado("R$ 0,00")
+    setPrecoCnpjFormatado("R$ 0,00")
     setCor("#69245d")
     setSelectedTamanhoId("")
     setAltura("")
@@ -198,19 +200,34 @@ export function NewPacoteModal({ isOpen, onClose, onSuccess }: NewPacoteModalPro
     )
   }
 
-  // Lidar com a mudança no preço
-  const handlePrecoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  // Lidar com a mudança no preço CPF
+  const handlePrecoCpfChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const valor = e.target.value
 
     // Se o usuário apagar tudo, definir como vazio
     if (!valor) {
-      setPrecoFormatado("R$ 0,00")
+      setPrecoCpfFormatado("R$ 0,00")
       return
     }
 
     // Formatar o valor como dinheiro
     const valorFormatado = formatarDinheiro(valor)
-    setPrecoFormatado(valorFormatado)
+    setPrecoCpfFormatado(valorFormatado)
+  }
+
+  // Lidar com a mudança no preço CNPJ
+  const handlePrecoCnpjChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const valor = e.target.value
+
+    // Se o usuário apagar tudo, definir como vazio
+    if (!valor) {
+      setPrecoCnpjFormatado("R$ 0,00")
+      return
+    }
+
+    // Formatar o valor como dinheiro
+    const valorFormatado = formatarDinheiro(valor)
+    setPrecoCnpjFormatado(valorFormatado)
   }
 
   // Lidar com a mudança na altura
@@ -311,11 +328,21 @@ export function NewPacoteModal({ isOpen, onClose, onSuccess }: NewPacoteModalPro
       return false
     }
 
-    const precoNumerico = converterParaNumero(precoFormatado)
-    if (isNaN(precoNumerico) || precoNumerico <= 0) {
+    const precoCpfNumerico = converterParaNumero(precoCpfFormatado)
+    if (isNaN(precoCpfNumerico) || precoCpfNumerico <= 0) {
       toast({
         title: "Erro",
-        description: "O preço deve ser um número válido maior que zero.",
+        description: "O preço CPF deve ser um número válido maior que zero.",
+        variant: "destructive",
+      })
+      return false
+    }
+
+    const precoCnpjNumerico = converterParaNumero(precoCnpjFormatado)
+    if (isNaN(precoCnpjNumerico) || precoCnpjNumerico <= 0) {
+      toast({
+        title: "Erro",
+        description: "O preço CNPJ deve ser um número válido maior que zero.",
         variant: "destructive",
       })
       return false
@@ -401,7 +428,8 @@ export function NewPacoteModal({ isOpen, onClose, onSuccess }: NewPacoteModalPro
 
       // Preparar os dados do pacote
       const nomePacote = `${prefixo} ${numero}`
-      const precoNumerico = converterParaNumero(precoFormatado)
+      const precoCpfNumerico = converterParaNumero(precoCpfFormatado)
+      const precoCnpjNumerico = converterParaNumero(precoCnpjFormatado)
 
       // Para cada combinação, criar altura, largura e pacote
       for (const combinacao of combinacoes) {
@@ -432,7 +460,8 @@ export function NewPacoteModal({ isOpen, onClose, onSuccess }: NewPacoteModalPro
         // 3. Criar o pacote
         const { error: pacoteError } = await supabase.from("pacotes").insert({
           descricao: nomePacote,
-          preco: precoNumerico,
+          preco_cpf: precoCpfNumerico,
+          preco_cnpj: precoCnpjNumerico,
           cor: cor,
           largura_id: larguraData[0].id,
           imagem: gerarUrlImagem(cor), // Adicionar a URL da imagem
@@ -504,11 +533,22 @@ export function NewPacoteModal({ isOpen, onClose, onSuccess }: NewPacoteModalPro
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="preco">Preço</Label>
+              <Label htmlFor="preco_cpf">Preço CPF (Pessoa Física)</Label>
               <Input
-                id="preco"
-                value={precoFormatado}
-                onChange={handlePrecoChange}
+                id="preco_cpf"
+                value={precoCpfFormatado}
+                onChange={handlePrecoCpfChange}
+                placeholder="R$ 0,00"
+                disabled={isLoading}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="preco_cnpj">Preço CNPJ (Pessoa Jurídica)</Label>
+              <Input
+                id="preco_cnpj"
+                value={precoCnpjFormatado}
+                onChange={handlePrecoCnpjChange}
                 placeholder="R$ 0,00"
                 disabled={isLoading}
               />

@@ -1,4 +1,13 @@
-// Função para criar hash da senha usando SHA-256 com Web Crypto API
+import { createHash } from "crypto"
+
+// Função síncrona para criar hash da senha usando SHA-256 (Node.js crypto)
+// Use esta função em server-side (API routes)
+export function hashPasswordSync(password: string): string {
+  return createHash("sha256").update(password).digest("hex")
+}
+
+// Função assíncrona para criar hash da senha usando SHA-256 com Web Crypto API
+// Use esta função em client-side (componentes React)
 export async function hashPassword(password: string): Promise<string> {
   // Converter a string para um array de bytes
   const encoder = new TextEncoder()

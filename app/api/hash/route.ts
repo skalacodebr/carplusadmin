@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server"
-import { hashPassword } from "@/lib/auth"
+import { hashPasswordSync } from "@/lib/auth"
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url)
@@ -9,7 +9,7 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "Password parameter is required" }, { status: 400 })
   }
 
-  const hash = hashPassword(password)
+  const hash = hashPasswordSync(password)
 
   return NextResponse.json({
     password,

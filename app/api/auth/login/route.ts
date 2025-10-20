@@ -1,12 +1,6 @@
 import { NextResponse } from "next/server"
 import { supabase } from "@/lib/supabase"
-import { createHash } from "crypto"
-
-// Função para criar hash da senha usando SHA-256
-// Você deve substituir esta função pelo algoritmo de hash específico usado no seu sistema
-const hashPassword = (password: string): string => {
-  return createHash("sha256").update(password).digest("hex")
-}
+import { hashPasswordSync } from "@/lib/auth"
 
 export async function POST(request: Request) {
   try {
@@ -33,16 +27,10 @@ export async function POST(request: Request) {
     }
 
     // Criar hash da senha fornecida pelo usuário
-    const hashedPassword = hashPassword(password)
+    const hashedPassword = hashPasswordSync(password)
 
     // Verificar se o hash da senha corresponde ao hash armazenado no banco
-    const isPasswordValid = user.senha === hashedPassword
-
-    // Tentativa alternativa: verificar se a senha em texto puro corresponde
-    // Isso é apenas para compatibilidade durante a transição para senhas com hash
-    const isPlainPasswordValid = user.senha === password
-
-    if (!isPasswordValid && !isPlainPasswordValid) {
+    if (user.senha !== hashedPassword) {
       return NextResponse.json({ error: "Email ou senha incorretos" }, { status: 401 })
     }
 

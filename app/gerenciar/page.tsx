@@ -16,7 +16,8 @@ import { NewPacoteModal } from "@/components/pacotes/new-pacote-modal"
 interface Pacote {
   id: number
   descricao: string
-  preco: number | null
+  preco_cpf: number | null
+  preco_cnpj: number | null
   cor: string | null
   tamanho_nome: string
   altura_valor: string
@@ -25,7 +26,8 @@ interface Pacote {
 
 interface PacoteAgrupado {
   descricao: string
-  preco: number | null
+  preco_cpf: number | null
+  preco_cnpj: number | null
   cor: string | null
   combinacoes: {
     id: number
@@ -45,7 +47,8 @@ export default function GerenciarPacotes() {
   const [isAddCombinacaoOpen, setIsAddCombinacaoOpen] = useState(false)
   const [selectedPacoteForCombinacao, setSelectedPacoteForCombinacao] = useState<{
     descricao: string
-    preco: number | null
+    preco_cpf: number | null
+    preco_cnpj: number | null
     cor: string | null
   } | null>(null)
   const [isNewPacoteOpen, setIsNewPacoteOpen] = useState(false)
@@ -65,7 +68,8 @@ export default function GerenciarPacotes() {
           `
           id,
           descricao,
-          preco,
+          preco_cpf,
+          preco_cnpj,
           cor,
           larguras!inner(
             valor,
@@ -86,7 +90,8 @@ export default function GerenciarPacotes() {
       const pacotes: Pacote[] = data.map((item) => ({
         id: item.id,
         descricao: item.descricao,
-        preco: item.preco,
+        preco_cpf: item.preco_cpf,
+        preco_cnpj: item.preco_cnpj,
         cor: item.cor,
         tamanho_nome: item.larguras.alturas.tamanhos.nome,
         altura_valor: item.larguras.alturas.valor,
@@ -100,7 +105,8 @@ export default function GerenciarPacotes() {
         if (!pacotesMap.has(pacote.descricao)) {
           pacotesMap.set(pacote.descricao, {
             descricao: pacote.descricao,
-            preco: pacote.preco,
+            preco_cpf: pacote.preco_cpf,
+            preco_cnpj: pacote.preco_cnpj,
             cor: pacote.cor,
             combinacoes: [],
           })
@@ -169,7 +175,8 @@ export default function GerenciarPacotes() {
   const handleAddCombinacaoClick = (pacote: PacoteAgrupado) => {
     setSelectedPacoteForCombinacao({
       descricao: pacote.descricao,
-      preco: pacote.preco,
+      preco_cpf: pacote.preco_cpf,
+      preco_cnpj: pacote.preco_cnpj,
       cor: pacote.cor,
     })
     setIsAddCombinacaoOpen(true)
@@ -234,7 +241,7 @@ export default function GerenciarPacotes() {
                     <div>
                       <CardTitle>{pacote.descricao}</CardTitle>
                       <CardDescription>
-                        Preço: {formatarPreco(pacote.preco)} • {pacote.combinacoes.length} combinações
+                        CPF: {formatarPreco(pacote.preco_cpf)} | CNPJ: {formatarPreco(pacote.preco_cnpj)} • {pacote.combinacoes.length} combinações
                       </CardDescription>
                     </div>
                   </div>

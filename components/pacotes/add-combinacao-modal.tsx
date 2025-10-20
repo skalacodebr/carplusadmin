@@ -30,7 +30,8 @@ interface AddCombinacaoModalProps {
   onOpenChange: (open: boolean) => void
   pacote: {
     descricao: string
-    preco: number | null
+    preco_cpf: number | null
+    preco_cnpj: number | null
     cor: string | null
   }
   onCombinacaoAdded: () => void
@@ -272,7 +273,8 @@ export function AddCombinacaoModal({ open, onOpenChange, pacote, onCombinacaoAdd
           // Pacote não existe, criar
           const { error: novoPacoteError } = await supabase.from("pacotes").insert({
             descricao: pacote.descricao,
-            preco: pacote.preco,
+            preco_cpf: pacote.preco_cpf,
+            preco_cnpj: pacote.preco_cnpj,
             cor: pacote.cor,
             largura_id: larguraId,
             status: "ativo",

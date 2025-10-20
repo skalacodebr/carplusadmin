@@ -24,7 +24,8 @@ interface PacoteDetail {
   pacote: {
     id: number
     descricao: string
-    preco: number | null
+    preco_cpf: number | null
+    preco_cnpj: number | null
     qtd_esferas: number
     cor: string
   }
@@ -83,7 +84,8 @@ export function PacoteDetailsDialog({ pacoteId, isOpen, onClose, onUpdate }: Pac
   // Estados para edição
   const [editPrefixo, setEditPrefixo] = useState("LTP")
   const [editNumero, setEditNumero] = useState("")
-  const [editPrecoFormatado, setEditPrecoFormatado] = useState("R$ 0,00")
+  const [editPrecoCpfFormatado, setEditPrecoCpfFormatado] = useState("R$ 0,00")
+  const [editPrecoCnpjFormatado, setEditPrecoCnpjFormatado] = useState("R$ 0,00")
   const [editCor, setEditCor] = useState("")
 
   useEffect(() => {
@@ -112,10 +114,21 @@ export function PacoteDetailsDialog({ pacoteId, isOpen, onClose, onUpdate }: Pac
         setEditNumero(pacoteInfo.descricao)
       }
 
-      // Formatar o preço como dinheiro (com verificação para evitar erro com valor nulo)
-      const preco = pacoteInfo.preco ?? 0
-      setEditPrecoFormatado(
-        preco.toLocaleString("pt-BR", {
+      // Formatar o preço CPF como dinheiro
+      const precoCpf = pacoteInfo.preco_cpf ?? 0
+      setEditPrecoCpfFormatado(
+        precoCpf.toLocaleString("pt-BR", {
+          style: "currency",
+          currency: "BRL",
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        }),
+      )
+
+      // Formatar o preço CNPJ como dinheiro
+      const precoCnpj = pacoteInfo.preco_cnpj ?? 0
+      setEditPrecoCnpjFormatado(
+        precoCnpj.toLocaleString("pt-BR", {
           style: "currency",
           currency: "BRL",
           minimumFractionDigits: 2,
@@ -127,18 +140,32 @@ export function PacoteDetailsDialog({ pacoteId, isOpen, onClose, onUpdate }: Pac
     }
   }, [pacoteInfo])
 
-  const handlePrecoChange = (e: ChangeEvent<HTMLInputElement>) => {
+  const handlePrecoCpfChange = (e: ChangeEvent<HTMLInputElement>) => {
     const valor = e.target.value
 
     // Se o usuário apagar tudo, definir como vazio
     if (!valor) {
-      setEditPrecoFormatado("R$ 0,00")
+      setEditPrecoCpfFormatado("R$ 0,00")
       return
     }
 
     // Formatar o valor como dinheiro
     const valorFormatado = formatarDinheiro(valor)
-    setEditPrecoFormatado(valorFormatado)
+    setEditPrecoCpfFormatado(valorFormatado)
+  }
+
+  const handlePrecoCnpjChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const valor = e.target.value
+
+    // Se o usuário apagar tudo, definir como vazio
+    if (!valor) {
+      setEditPrecoCnpjFormatado("R$ 0,00")
+      return
+    }
+
+    // Formatar o valor como dinheiro
+    const valorFormatado = formatarDinheiro(valor)
+    setEditPrecoCnpjFormatado(valorFormatado)
   }
 
   const fetchPacoteDetails = async (id: number) => {
@@ -160,10 +187,11 @@ export function PacoteDetailsDialog({ pacoteId, isOpen, onClose, onUpdate }: Pac
         return
       }
 
-      // Garantir que o preço seja um número (ou 0 se for nulo)
+      // Garantir que os preços sejam números (ou 0 se forem nulos)
       const pacoteComPrecoValido = {
         ...pacoteData,
-        preco: pacoteData.preco ?? 0,
+        preco_cpf: pacoteData.preco_cpf ?? 0,
+        preco_cnpj: pacoteData.preco_cnpj ?? 0,
       }
 
       setPacoteInfo(pacoteComPrecoValido)
@@ -282,14 +310,25 @@ export function PacoteDetailsDialog({ pacoteId, isOpen, onClose, onUpdate }: Pac
         return
       }
 
-      // Converter o preço formatado para número
-      const precoNumerico = converterParaNumero(editPrecoFormatado)
+      // Converter os preços formatados para números
+      const precoCpfNumerico = converterParaNumero(editPrecoCpfFormatado)
+      const precoCnpjNumerico = converterParaNumero(editPrecoCnpjFormatado)
 
-      // Validar preço
-      if (isNaN(precoNumerico) || precoNumerico <= 0) {
+      // Validar preço CPF
+      if (isNaN(precoCpfNumerico) || precoCpfNumerico <= 0) {
         toast({
           title: "Erro",
-          description: "O preço deve ser um número válido maior que zero",
+          description: "O preço CPF deve ser um número válido maior que zero",
+          variant: "destructive",
+        })
+        return
+      }
+
+      // Validar preço CNPJ
+      if (isNaN(precoCnpjNumerico) || precoCnpjNumerico <= 0) {
+        toast({
+          title: "Erro",
+          description: "O preço CNPJ deve ser um número válido maior que zero",
           variant: "destructive",
         })
         return
@@ -317,7 +356,8 @@ export function PacoteDetailsDialog({ pacoteId, isOpen, onClose, onUpdate }: Pac
         .from("pacotes")
         .update({
           descricao: novoNome,
-          preco: precoNumerico,
+          preco_cpf: precoCpfNumerico,
+          preco_cnpj: precoCnpjNumerico,
           cor: editCor,
         })
         .eq("id", pacoteInfo.id)
@@ -340,7 +380,8 @@ export function PacoteDetailsDialog({ pacoteId, isOpen, onClose, onUpdate }: Pac
       const { error: updateAllError } = await supabase
         .from("pacotes")
         .update({
-          preco: precoNumerico,
+          preco_cpf: precoCpfNumerico,
+          preco_cnpj: precoCnpjNumerico,
           cor: editCor,
         })
         .eq("descricao", novoNome)
@@ -352,7 +393,8 @@ export function PacoteDetailsDialog({ pacoteId, isOpen, onClose, onUpdate }: Pac
       setPacoteInfo({
         ...pacoteInfo,
         descricao: novoNome,
-        preco: precoNumerico,
+        preco_cpf: precoCpfNumerico,
+        preco_cnpj: precoCnpjNumerico,
         cor: editCor,
       })
 
@@ -457,11 +499,22 @@ export function PacoteDetailsDialog({ pacoteId, isOpen, onClose, onUpdate }: Pac
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="preco">Preço</Label>
+                  <Label htmlFor="preco_cpf">Preço CPF (Pessoa Física)</Label>
                   <Input
-                    id="preco"
-                    value={editPrecoFormatado}
-                    onChange={handlePrecoChange}
+                    id="preco_cpf"
+                    value={editPrecoCpfFormatado}
+                    onChange={handlePrecoCpfChange}
+                    placeholder="R$ 0,00"
+                    disabled={isSaving}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="preco_cnpj">Preço CNPJ (Pessoa Jurídica)</Label>
+                  <Input
+                    id="preco_cnpj"
+                    value={editPrecoCnpjFormatado}
+                    onChange={handlePrecoCnpjChange}
                     placeholder="R$ 0,00"
                     disabled={isSaving}
                   />
@@ -487,15 +540,26 @@ export function PacoteDetailsDialog({ pacoteId, isOpen, onClose, onUpdate }: Pac
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4 pt-2">
-                  <div className="space-y-1">
-                    <p className="text-sm font-medium text-muted-foreground">Preço</p>
-                    <p className="font-medium">
-                      {(pacoteInfo.preco ?? 0).toLocaleString("pt-BR", {
-                        style: "currency",
-                        currency: "BRL",
-                      })}
-                    </p>
+                <div className="space-y-3 pt-2">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-1">
+                      <p className="text-sm font-medium text-muted-foreground">Preço CPF</p>
+                      <p className="font-medium">
+                        {(pacoteInfo.preco_cpf ?? 0).toLocaleString("pt-BR", {
+                          style: "currency",
+                          currency: "BRL",
+                        })}
+                      </p>
+                    </div>
+                    <div className="space-y-1">
+                      <p className="text-sm font-medium text-muted-foreground">Preço CNPJ</p>
+                      <p className="font-medium">
+                        {(pacoteInfo.preco_cnpj ?? 0).toLocaleString("pt-BR", {
+                          style: "currency",
+                          currency: "BRL",
+                        })}
+                      </p>
+                    </div>
                   </div>
                   <div className="space-y-1">
                     <p className="text-sm font-medium text-muted-foreground">Cor</p>
